@@ -88,15 +88,14 @@ struct ClaudeInstancesView: View {
     // MARK: - Actions
 
     private func focusSession(_ session: SessionState) {
-        guard session.isInTmux else { return }
-
-        Task {
-            if let pid = session.pid {
-                _ = await YabaiController.shared.focusWindow(forClaudePid: pid)
-            } else {
-                _ = await YabaiController.shared.focusWindow(forWorkingDirectory: session.cwd)
-            }
+        // Try to focus the terminal running this Claude session
+        if let pid = session.pid {
+            let success = TerminalFocuser.focusTerminal(forClaudePid: pid)
+            if success { return }
         }
+
+        // Fallback: try by working directory
+        _ = TerminalFocuser.focusTerminal(forWorkingDirectory: session.cwd)
     }
 
     private func openChat(_ session: SessionState) {
@@ -128,7 +127,6 @@ struct InstanceRow: View {
 
     @State private var isHovered = false
     @State private var spinnerPhase = 0
-    @State private var isYabaiAvailable = false
 
     private let claudeOrange = Color(red: 0.85, green: 0.47, blue: 0.34)
     private let spinnerSymbols = ["·", "✢", "✳", "∗", "✻", "✽"]
@@ -234,12 +232,11 @@ struct InstanceRow: View {
                         onChat()
                     }
 
-                    // Go to Terminal button (only if yabai available)
-                    if isYabaiAvailable {
-                        TerminalButton(
-                            isEnabled: session.isInTmux,
-                            onTap: { onFocus() }
-                        )
+                    // Go to Terminal button
+                    if session.pid != nil {
+                        IconButton(icon: "terminal") {
+                            onFocus()
+                        }
                     }
                 }
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
@@ -257,9 +254,9 @@ struct InstanceRow: View {
                         onChat()
                     }
 
-                    // Focus icon (only for tmux instances with yabai)
-                    if session.isInTmux && isYabaiAvailable {
-                        IconButton(icon: "eye") {
+                    // Terminal focus icon - show when we have a PID to find terminal
+                    if session.pid != nil {
+                        IconButton(icon: "terminal") {
                             onFocus()
                         }
                     }
@@ -287,9 +284,6 @@ struct InstanceRow: View {
                 .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
         )
         .onHover { isHovered = $0 }
-        .task {
-            isYabaiAvailable = await WindowFinder.shared.isYabaiAvailable()
-        }
     }
 
     @ViewBuilder
