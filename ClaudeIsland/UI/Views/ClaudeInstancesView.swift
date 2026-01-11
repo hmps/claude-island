@@ -143,6 +143,24 @@ struct InstanceRow: View {
         return toolName == "AskUserQuestion"
     }
 
+    /// Status text based on session phase (fallback when no message content)
+    private var phaseStatusText: String {
+        switch session.phase {
+        case .processing:
+            return "Processing..."
+        case .compacting:
+            return "Compacting..."
+        case .waitingForInput:
+            return "Ready"
+        case .waitingForApproval:
+            return "Waiting for approval"
+        case .idle:
+            return "Idle"
+        case .ended:
+            return "Ended"
+        }
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
             // State indicator on left
@@ -218,6 +236,12 @@ struct InstanceRow: View {
                     Text(lastMsg)
                         .font(.system(size: 11))
                         .foregroundColor(.white.opacity(0.4))
+                        .lineLimit(1)
+                } else {
+                    // Fallback: show phase-based status when no message content
+                    Text(phaseStatusText)
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.35))
                         .lineLimit(1)
                 }
             }
