@@ -93,6 +93,7 @@ def main():
         "event": event,
         "pid": claude_pid,
         "tty": tty,
+        "tmux_pane": os.environ.get("TMUX_PANE", ""),
     }
 
     # Map events to status

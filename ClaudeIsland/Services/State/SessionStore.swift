@@ -133,6 +133,9 @@ actor SessionStore {
         if let tty = event.tty {
             session.tty = tty.replacingOccurrences(of: "/dev/", with: "")
         }
+        if let pane = event.tmuxPane, !pane.isEmpty {
+            session.tmuxPane = pane
+        }
         session.lastActivity = Date()
 
         if event.status == "ended" {

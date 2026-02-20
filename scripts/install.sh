@@ -23,6 +23,7 @@ echo "Installing to /Applications..."
 rm -rf "$INSTALL_PATH"
 cp -R "$APP_PATH" "$INSTALL_PATH"
 xattr -cr "$INSTALL_PATH"
+codesign --force --deep --sign - "$INSTALL_PATH"
 
 echo "Launching..."
 open "$INSTALL_PATH"

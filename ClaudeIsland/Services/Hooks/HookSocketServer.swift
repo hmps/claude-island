@@ -23,6 +23,7 @@ struct HookEvent: Codable, Sendable {
     let tool: String?
     let toolInput: [String: AnyCodable]?
     let toolUseId: String?
+    let tmuxPane: String?
     let notificationType: String?
     let message: String?
 
@@ -31,12 +32,13 @@ struct HookEvent: Codable, Sendable {
         case cwd, event, status, pid, tty, tool
         case toolInput = "tool_input"
         case toolUseId = "tool_use_id"
+        case tmuxPane = "tmux_pane"
         case notificationType = "notification_type"
         case message
     }
 
     /// Create a copy with updated toolUseId
-    init(sessionId: String, cwd: String, event: String, status: String, pid: Int?, tty: String?, tool: String?, toolInput: [String: AnyCodable]?, toolUseId: String?, notificationType: String?, message: String?) {
+    init(sessionId: String, cwd: String, event: String, status: String, pid: Int?, tty: String?, tool: String?, toolInput: [String: AnyCodable]?, toolUseId: String?, tmuxPane: String?, notificationType: String?, message: String?) {
         self.sessionId = sessionId
         self.cwd = cwd
         self.event = event
@@ -46,6 +48,7 @@ struct HookEvent: Codable, Sendable {
         self.tool = tool
         self.toolInput = toolInput
         self.toolUseId = toolUseId
+        self.tmuxPane = tmuxPane
         self.notificationType = notificationType
         self.message = message
     }
@@ -446,6 +449,7 @@ class HookSocketServer {
                 tool: event.tool,
                 toolInput: event.toolInput,
                 toolUseId: toolUseId,  // Use resolved toolUseId
+                tmuxPane: event.tmuxPane,
                 notificationType: event.notificationType,
                 message: event.message
             )

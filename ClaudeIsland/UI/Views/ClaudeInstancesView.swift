@@ -89,13 +89,20 @@ struct ClaudeInstancesView: View {
 
     private func focusSession(_ session: SessionState) {
         // Try to focus the terminal running this Claude session
+        var focused = false
         if let pid = session.pid {
-            let success = TerminalFocuser.focusTerminal(forClaudePid: pid)
-            if success { return }
+            focused = TerminalFocuser.focusTerminal(forClaudePid: pid)
         }
 
         // Fallback: try by working directory
-        _ = TerminalFocuser.focusTerminal(forWorkingDirectory: session.cwd)
+        if !focused {
+            focused = TerminalFocuser.focusTerminal(forWorkingDirectory: session.cwd)
+        }
+
+        // If in tmux, switch to the specific pane
+        if focused, let pane = session.tmuxPane, !pane.isEmpty {
+            Task { await TmuxController.shared.focusPane(paneId: pane) }
+        }
     }
 
     private func openChat(_ session: SessionState) {
