@@ -1,4 +1,5 @@
 import AppKit
+import ApplicationServices
 import IOKit
 import Mixpanel
 import Sparkle
@@ -66,6 +67,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         Mixpanel.mainInstance().track(event: "App Launched")
         Mixpanel.mainInstance().flush()
+
+        // Prompt for accessibility if not already granted (adds this build to the list)
+        let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        AXIsProcessTrustedWithOptions(opts)
 
         HookInstaller.installIfNeeded()
         NSApplication.shared.setActivationPolicy(.accessory)
