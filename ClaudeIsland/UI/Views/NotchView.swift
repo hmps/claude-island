@@ -146,7 +146,7 @@ struct NotchView: View {
             VStack(spacing: 0) {
                 // In pill mode, add a top gap so the pill sits within the menu bar
                 if isPillMode {
-                    Spacer().frame(height: 5)
+                    Spacer().frame(height: 3)
                 }
 
                 notchLayout
