@@ -42,3 +42,5 @@ releases/
 # Xcode backup
 *.xcodeproj.backup/
 
+.claude/settings.local.json
+.claude/plans
