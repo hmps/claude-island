@@ -31,6 +31,9 @@ class ClaudeSessionMonitor: ObservableObject {
     // MARK: - Monitoring Lifecycle
 
     func startMonitoring() {
+        // Start process watching and periodic state refresh
+        Task { await ProcessWatcher.shared.startPeriodicRefresh() }
+
         HookSocketServer.shared.start(
             onEvent: { event in
                 Task {
@@ -72,6 +75,7 @@ class ClaudeSessionMonitor: ObservableObject {
 
     func stopMonitoring() {
         HookSocketServer.shared.stop()
+        Task { await ProcessWatcher.shared.stopAll() }
     }
 
     // MARK: - Permission Handling

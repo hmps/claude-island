@@ -67,6 +67,9 @@ enum SessionEvent: Sendable {
 
     // MARK: - Session Lifecycle
 
+    /// Process exited (detected by ProcessWatcher) — marks session as ended but keeps it visible
+    case processExited(sessionId: String)
+
     /// Session has ended
     case sessionEnded(sessionId: String)
 
@@ -197,6 +200,8 @@ extension SessionEvent: CustomStringConvertible {
             return "interruptDetected(session: \(sessionId.prefix(8)))"
         case .clearDetected(let sessionId):
             return "clearDetected(session: \(sessionId.prefix(8)))"
+        case .processExited(let sessionId):
+            return "processExited(session: \(sessionId.prefix(8)))"
         case .sessionEnded(let sessionId):
             return "sessionEnded(session: \(sessionId.prefix(8)))"
         case .loadHistory(let sessionId, _):

@@ -72,6 +72,9 @@ actor SessionStore {
         case .clearDetected(let sessionId):
             await processClearDetected(sessionId: sessionId)
 
+        case .processExited(let sessionId):
+            processProcessExited(sessionId: sessionId)
+
         case .sessionEnded(let sessionId):
             await processSessionEnd(sessionId: sessionId)
 
@@ -129,6 +132,7 @@ actor SessionStore {
         if let pid = event.pid {
             let tree = ProcessTreeBuilder.shared.buildTree()
             session.isInTmux = ProcessTreeBuilder.shared.isInTmux(pid: pid, tree: tree)
+            Task { await ProcessWatcher.shared.watch(pid: pid, sessionId: sessionId) }
         }
         if let tty = event.tty {
             session.tty = tty.replacingOccurrences(of: "/dev/", with: "")
@@ -141,6 +145,7 @@ actor SessionStore {
         if event.status == "ended" {
             sessions.removeValue(forKey: sessionId)
             cancelPendingSync(sessionId: sessionId)
+            Task { await ProcessWatcher.shared.stop(sessionId: sessionId) }
             return
         }
 
@@ -847,6 +852,7 @@ actor SessionStore {
     private func processSessionEnd(sessionId: String) async {
         sessions.removeValue(forKey: sessionId)
         cancelPendingSync(sessionId: sessionId)
+        await ProcessWatcher.shared.stop(sessionId: sessionId)
     }
 
     // MARK: - History Loading
@@ -961,6 +967,22 @@ actor SessionStore {
     private func cancelPendingSync(sessionId: String) {
         pendingSyncs[sessionId]?.cancel()
         pendingSyncs.removeValue(forKey: sessionId)
+    }
+
+    // MARK: - Process Exit Handling
+
+    /// Handle process exit detected by ProcessWatcher
+    private func processProcessExited(sessionId: String) {
+        guard var session = sessions[sessionId], session.phase != .ended else { return }
+        if session.phase.canTransition(to: .ended) {
+            session.phase = .ended
+            sessions[sessionId] = session
+        }
+    }
+
+    /// Trigger a file sync for a session (used by ProcessWatcher for periodic refresh)
+    func requestFileSync(sessionId: String, cwd: String) {
+        scheduleFileSync(sessionId: sessionId, cwd: cwd)
     }
 
     // MARK: - State Publishing
